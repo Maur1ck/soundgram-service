@@ -24,6 +24,9 @@ class YandexMusicService:
     OLD_FORMAT_REGEX = r"users/([^/]+)/playlists/(\d+)"
     NEW_FORMAT_REGEX = r"playlists/([0-9a-fA-F\-]+)"
 
+    def __init__(self, client: httpx.AsyncClient):
+        self.client = client
+
     async def get_playlist(self, url: HttpUrl) -> PlaylistResponse:
         """
         Получает информацию о плейлисте по ссылке.
@@ -69,24 +72,23 @@ class YandexMusicService:
         return ""
 
     async def _fetch_data(self, api_url: str) -> dict:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            response = await self.client.get(api_url, headers=self.HEADERS, follow_redirects=True)
+            response.raise_for_status()
+
             try:
-                response = await client.get(api_url, headers=self.HEADERS, follow_redirects=True)
-                response.raise_for_status()
-
-                try:
-                    return response.json()
-                except Exception:
-                    raise HTTPException(status_code=403, detail="Яндекс требует капчу (попробуйте сменить IP)")
-
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    raise HTTPException(status_code=404, detail="Плейлист не найден или доступ к нему закрыт")
-                raise HTTPException(status_code=e.response.status_code, detail="Ошибка при запросе к источнику")
-            except HTTPException:
-                raise
+                return response.json()
             except Exception:
-                raise HTTPException(status_code=503, detail="Ошибка соединения с источником")
+                raise HTTPException(status_code=403, detail="Яндекс требует капчу (попробуйте сменить IP)")
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Плейлист не найден или доступ к нему закрыт")
+            raise HTTPException(status_code=e.response.status_code, detail="Ошибка при запросе к источнику")
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(status_code=503, detail="Ошибка соединения с источником")
 
     def _parse_metadata(self, data: dict) -> tuple[str, str]:
         title = "Unknown"

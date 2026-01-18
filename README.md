@@ -15,8 +15,8 @@
 
 ### 1. Клонирование проекта
 ```bash
-git clone https://github.com/ваше-имя/soundgram-api-service.git
-cd soundgram-api-service
+git clone https://github.com/Maur1ck/soundgram-service.git
+cd soundgram-service
 ```
 
 ### 2. Запуск через Docker (Рекомендуется)

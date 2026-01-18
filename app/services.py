@@ -9,7 +9,8 @@ from app.exceptions import (
     CaptchaRequiredException,
     PlaylistNotFoundException,
     ServiceUnavailableException,
-    ExternalServiceException
+    ExternalServiceException,
+    SoundgramHTTPException
 )
 
 
@@ -91,6 +92,8 @@ class YandexMusicService:
             if e.response.status_code == 404:
                 raise PlaylistNotFoundException()
             raise ExternalServiceException(status_code=e.response.status_code)
+        except SoundgramHTTPException:
+            raise
         except Exception:
             raise ServiceUnavailableException()
 

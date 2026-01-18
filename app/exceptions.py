@@ -36,7 +36,9 @@ class ServiceUnavailableException(SoundgramHTTPException):
 
 
 class ExternalServiceException(SoundgramHTTPException):
-    def __init__(self, status_code: int, detail: str = "Ошибка при запросе к источнику"):
+    def __init__(
+        self, status_code: int, detail: str = "Ошибка при запросе к источнику"
+    ):
         self.status_code = status_code
         self.detail = detail
         super().__init__(detail=self.detail)

@@ -16,7 +16,9 @@ async def client():
     """Клиент с транспортом приложения для интеграционных тестов API."""
     async with httpx.AsyncClient(timeout=15.0) as http_client:
         app.state.http_client = http_client
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as c:
             yield c
         if hasattr(app.state, "http_client"):
             del app.state.http_client

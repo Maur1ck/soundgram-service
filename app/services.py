@@ -10,7 +10,7 @@ from app.exceptions import (
     PlaylistNotFoundException,
     ServiceUnavailableException,
     ExternalServiceException,
-    SoundgramHTTPException
+    SoundgramHTTPException,
 )
 
 
@@ -25,7 +25,7 @@ class YandexMusicService:
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "X-Retpath-Y": "https://music.yandex.ru/",
         "X-Requested-With": "XMLHttpRequest",
-        "Accept-Language": "ru"
+        "Accept-Language": "ru",
     }
 
     OLD_FORMAT_REGEX = r"users/([^/]+)/playlists/(\d+)"
@@ -65,22 +65,20 @@ class YandexMusicService:
         title, owner_name = self._parse_metadata(data)
         tracks = self._parse_tracks(data)
 
-        return PlaylistResponse(
-            title=str(title),
-            owner=str(owner_name),
-            tracks=tracks
-        )
+        return PlaylistResponse(title=str(title), owner=str(owner_name), tracks=tracks)
 
     def _get_api_url(self, format_type: str, params: dict) -> str:
-        if format_type == 'old':
+        if format_type == "old":
             return f"https://music.yandex.ru/handlers/playlist.jsx?owner={params['owner']}&kinds={params['kind']}&light=true&lang=ru&external-domain=music.yandex.ru"
-        elif format_type == 'new':
+        elif format_type == "new":
             return f"https://api.music.yandex.by/playlist/{params['playlist_id']}?resumestream=false&richtracks=true"
         return ""
 
     async def _fetch_data(self, api_url: str) -> dict:
         try:
-            response = await self.client.get(api_url, headers=self.HEADERS, follow_redirects=True)
+            response = await self.client.get(
+                api_url, headers=self.HEADERS, follow_redirects=True
+            )
             response.raise_for_status()
 
             try:
@@ -129,8 +127,11 @@ class YandexMusicService:
         track_title = str(track.get("title", "Unknown Track"))
 
         artists = track.get("artists", [])
-        author_names = [a["name"] for a in artists if isinstance(a, dict) and "name" in a] if isinstance(artists,
-                                                                                                         list) else []
+        author_names = (
+            [a["name"] for a in artists if isinstance(a, dict) and "name" in a]
+            if isinstance(artists, list)
+            else []
+        )
         if not author_names:
             author_names = ["Unknown Artist"]
 
@@ -139,15 +140,21 @@ class YandexMusicService:
 
         track_id = str(track.get("id"))
         albums = track.get("albums", [])
-        album_id = str(albums[0].get("id")) if isinstance(albums, list) and albums else None
+        album_id = (
+            str(albums[0].get("id")) if isinstance(albums, list) and albums else None
+        )
 
-        iframe_html = self._generate_iframe_code(album_id, track_id) if album_id and track_id else ""
+        iframe_html = (
+            self._generate_iframe_code(album_id, track_id)
+            if album_id and track_id
+            else ""
+        )
 
         return TrackInfo(
             title=track_title,
             authors=author_names,
             cover_url=cover_url,
-            iframe_html=iframe_html
+            iframe_html=iframe_html,
         )
 
     @classmethod
@@ -156,16 +163,11 @@ class YandexMusicService:
 
         match_old = re.search(cls.OLD_FORMAT_REGEX, url_str)
         if match_old:
-            return 'old', {
-                'owner': match_old.group(1),
-                'kind': match_old.group(2)
-            }
+            return "old", {"owner": match_old.group(1), "kind": match_old.group(2)}
 
         match_new = re.search(cls.NEW_FORMAT_REGEX, url_str)
         if match_new:
-            return 'new', {
-                'playlist_id': match_new.group(1)
-            }
+            return "new", {"playlist_id": match_new.group(1)}
 
         return None, None
 
@@ -175,5 +177,5 @@ class YandexMusicService:
             f'<iframe frameborder="0" style="border:none;width:100%;height:180px;" '
             f'width="100%" height="180" '
             f'src="https://music.yandex.ru/iframe/album/{album_id}/track/{track_id}">'
-            f'</iframe>'
+            f"</iframe>"
         )

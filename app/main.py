@@ -18,4 +18,6 @@ app = FastAPI(title="Soundgram Playlists Service", lifespan=lifespan)
 
 @app.post("/playlist")
 async def get_playlist_info(data: PlaylistRequest, request: Request):
-    return await YandexMusicService(request.app.state.http_client).get_playlist(data.url)
+    return await YandexMusicService(request.app.state.http_client).get_playlist(
+        data.url
+    )

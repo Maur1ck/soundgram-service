@@ -1,10 +1,16 @@
 import re
 import httpx
 from typing import Optional, Tuple
-from fastapi import HTTPException
 from pydantic import HttpUrl
 
 from app.schemas import PlaylistResponse, TrackInfo
+from app.exceptions import (
+    InvalidURLFormatException,
+    CaptchaRequiredException,
+    PlaylistNotFoundException,
+    ServiceUnavailableException,
+    ExternalServiceException
+)
 
 
 class YandexMusicService:
@@ -38,7 +44,7 @@ class YandexMusicService:
             PlaylistResponse: Объект с названием, автором и списком треков.
 
         Raises:
-            HTTPException:
+            SoundgramHTTPException:
                 - 400: Неверный формат ссылки.
                 - 403: Требуется капча.
                 - 404: Плейлист не найден/приватный.
@@ -47,7 +53,7 @@ class YandexMusicService:
         format_type, params = self._parse_url(url)
 
         if not format_type:
-            raise HTTPException(status_code=400, detail="Неверный формат ссылки")
+            raise InvalidURLFormatException()
 
         api_url = self._get_api_url(format_type, params)
         data = await self._fetch_data(api_url)
@@ -79,16 +85,14 @@ class YandexMusicService:
             try:
                 return response.json()
             except Exception:
-                raise HTTPException(status_code=403, detail="Яндекс требует капчу (попробуйте сменить IP)")
+                raise CaptchaRequiredException()
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Плейлист не найден или доступ к нему закрыт")
-            raise HTTPException(status_code=e.response.status_code, detail="Ошибка при запросе к источнику")
-        except HTTPException:
-            raise
+                raise PlaylistNotFoundException()
+            raise ExternalServiceException(status_code=e.response.status_code)
         except Exception:
-            raise HTTPException(status_code=503, detail="Ошибка соединения с источником")
+            raise ServiceUnavailableException()
 
     def _parse_metadata(self, data: dict) -> tuple[str, str]:
         title = "Unknown"

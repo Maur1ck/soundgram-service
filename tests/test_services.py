@@ -27,7 +27,7 @@ MOCK_PLAYLIST_DATA = {
 
 
 @pytest.mark.asyncio
-async def test_get_playlist_new_format_success(http_client):
+async def test_get_playlist_old_format_success(http_client):
     url = "https://music.yandex.ru/users/someuser/playlists/100500"
 
     async with respx.mock:
@@ -42,7 +42,7 @@ async def test_get_playlist_new_format_success(http_client):
 
 
 @pytest.mark.asyncio
-async def test_get_playlist_share_format_success(http_client):
+async def test_get_playlist_new_format_success(http_client):
     url = "https://music.yandex.ru/playlists/abcd-1234"
 
     async with respx.mock:

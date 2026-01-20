@@ -31,6 +31,22 @@ async def test_api_get_playlist_success(client):
 
 
 @pytest.mark.asyncio
+async def test_api_get_playlist_new_format_success(client):
+    url_to_fetch = "https://music.yandex.ru/playlists/abcd-1234"
+
+    async with respx.mock:
+        respx.route(host="api.music.yandex.by").mock(
+            return_value=Response(200, json=MOCK_API_RESPONSE)
+        )
+
+        response = await client.post("/playlist", json={"url": url_to_fetch})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "API Test Playlist"
+
+
+@pytest.mark.asyncio
 async def test_api_get_playlist_invalid_url(client):
     response = await client.post("/playlist", json={"url": "not_a_url"})
     assert response.status_code == 422

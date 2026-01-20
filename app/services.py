@@ -29,7 +29,7 @@ class YandexMusicService:
     }
 
     OLD_FORMAT_REGEX = r"users/([^/]+)/playlists/(\d+)"
-    NEW_FORMAT_REGEX = r"playlists/([0-9a-fA-F\-]+)"
+    NEW_FORMAT_REGEX = r"playlists/([a-zA-Z0-9\.\-_]+)"
 
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
